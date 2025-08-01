@@ -6,7 +6,9 @@ import 'react-toastify/dist/ReactToastify.css';
 import Main from './components/main/Main';
 import ChatPage from './pages/ChatPage';
 import ProfilePage from './pages/profile';
+import NotificationsPage from './pages/NotificationsPage';
 import { ChatProvider } from './context/ChatContext';
+import { NotificationProvider } from './context/NotificationContext';
 import RegisterForm from './components/login/RegisterForm';
 import Otp from './components/login/Otp';
 import Login from './components/login/Login';
@@ -28,11 +30,12 @@ function App() {
 
   return (
     <Router>
-      <ChatProvider>
-        {/* Global incoming call notification handler */}
-        <IncomingCallNotification />
-        
-        <Routes>
+      <NotificationProvider>
+        <ChatProvider>
+          {/* Global incoming call notification handler */}
+          <IncomingCallNotification />
+          
+          <Routes>
           <Route path="/" element={<Main />} />
           <Route path="/register" element={<RegisterForm />} />
           <Route path="/otp" element={<Otp />} />
@@ -43,6 +46,7 @@ function App() {
           <Route path="/change" element={<Password_change />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/reels" element={<Reel />} />
+          <Route path="/notifications" element={<NotificationsPage />} />
 
           {/* ✅ New video call route */}
           {/* <Route path="/video/:roomID" element={<VideoCall/>} /> */}
@@ -64,7 +68,8 @@ function App() {
           pauseOnHover
           theme="light"
         />
-      </ChatProvider>
+        </ChatProvider>
+      </NotificationProvider>
     </Router>
   );
 }

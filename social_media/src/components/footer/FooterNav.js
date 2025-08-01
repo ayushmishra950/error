@@ -836,6 +836,18 @@ const FooterNav = () => {
             }}
           />
         )}
+        
+        {/* Heart Notification Popup */}
+        <HeartNotificationPopup
+          notifications={popupNotifications}
+          onClose={removePopupNotification}
+          onNotificationClick={(notification) => {
+            console.log('Notification clicked:', notification);
+            // Navigate to notifications page or specific post
+            navigate('/notifications');
+          }}
+          heartButtonRef={heartButtonRef}
+        />
       </div>
     </>
   );

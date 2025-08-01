@@ -251,6 +251,85 @@ export const COMMENT_POST = gql`
   }
 `;
 
+// Notification Queries
+export const GET_USER_NOTIFICATIONS = gql`
+  query GetUserNotifications($userId: ID!) {
+    getUserNotifications(userId: $userId) {
+      id
+      recipient {
+        id
+        name
+        username
+        profileImage
+      }
+      sender {
+        id
+        name
+        username
+        profileImage
+      }
+      type
+      message
+      post {
+        id
+        caption
+        imageUrl
+        videoUrl
+        thumbnailUrl
+      }
+      commentText
+      commentId
+      isRead
+      createdAt
+    }
+  }
+`;
+
+export const GET_USER_NOTIFICATIONS_SAFE = gql`
+  query GetUserNotificationsSafe($userId: ID!) {
+    getUserNotifications(userId: $userId) {
+      id
+      recipient {
+        id
+        name
+        username
+        profileImage
+      }
+      sender {
+        id
+        name
+        username
+        profileImage
+      }
+      type
+      message
+      post {
+        id
+        caption
+        imageUrl
+        videoUrl
+        thumbnailUrl
+      }
+      commentText
+      commentId
+      isRead
+      createdAt
+    }
+  }
+`;
+
+export const GET_UNREAD_NOTIFICATIONS_COUNT = gql`
+  query GetUnreadNotificationsCount($userId: ID!) {
+    getUnreadNotificationsCount(userId: $userId)
+  }
+`;
+
+export const MARK_NOTIFICATIONS_AS_READ = gql`
+  mutation MarkNotificationsAsRead($userId: ID!) {
+    markNotificationsAsRead(userId: $userId)
+  }
+`;
+
 // Video Upload Mutations
 export const UPLOAD_VIDEO = gql`
   mutation UploadVideo(

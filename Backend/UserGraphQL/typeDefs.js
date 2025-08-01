@@ -21,7 +21,6 @@ const typeDefs = gql`
     videos: [Video]             # User's videos
   }
 
-  // tye notifications typedef
 
     type Notification {
     id: ID!
@@ -118,6 +117,7 @@ const typeDefs = gql`
 
     followAndUnfollow(id: ID!): User
     getUserInformation(id: ID!): User
+    markNotificationsAsRead(userId: ID!): String
   }
 `;
 

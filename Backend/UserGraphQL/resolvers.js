@@ -7,6 +7,7 @@ require('dotenv').config();
 const { GraphQLUpload } = require('graphql-upload');
 const Post = require('../Models/Post');
 const Video = require('../Models/Video');
+const Notification = require('../Models/Notification');
 const { uploadToCloudinary } = require('../Utils/cloudinary');
 
 const otpStore = {};
@@ -474,6 +475,28 @@ if (deletePost) {
   post.comments.push(newComment);
   await post.save();
 
+  // Create notification for post owner (if not commenting on own post)
+  if (post.createdBy.toString() !== userId) {
+    try {
+      const notification = new Notification({
+        recipient: post.createdBy,
+        sender: userId,
+        type: 'comment',
+        message: 'commented on your post',
+        post: postId,
+        commentText: text
+      });
+      await notification.save();
+      
+      // Increment unread count for recipient
+      await User.findByIdAndUpdate(post.createdBy, {
+        $inc: { unreadNotifications: 1 }
+      });
+    } catch (notificationError) {
+      console.error('Error creating comment notification:', notificationError);
+    }
+  }
+
   // await post.populate("comments.user");
 
   return post.comments;
@@ -499,6 +522,27 @@ if (deletePost) {
       post.likes = post.likes.filter(like => like.user.toString() !== userId);
     } else {
       post.likes.push({ user: userId, likedAt: new Date() });
+      
+      // Create notification for post owner (if not liking own post)
+      if (post.createdBy.toString() !== userId) {
+        try {
+          const notification = new Notification({
+            recipient: post.createdBy,
+            sender: userId,
+            type: 'like',
+            message: 'liked your post',
+            post: postId
+          });
+          await notification.save();
+          
+          // Increment unread count for recipient
+          await User.findByIdAndUpdate(post.createdBy, {
+            $inc: { unreadNotifications: 1 }
+          });
+        } catch (notificationError) {
+          console.error('Error creating like notification:', notificationError);
+        }
+      }
     }
 
     await post.save();
@@ -552,6 +596,24 @@ if (deletePost) {
           User.updateOne({ _id: reqUserId }, { $push: { following: id } }),
           User.updateOne({ _id: id }, { $push: { followers: reqUserId } }),
         ]);
+        
+        // Create follow notification
+        try {
+          const notification = new Notification({
+            recipient: id,
+            sender: reqUserId,
+            type: 'follow',
+            message: 'started following you'
+          });
+          await notification.save();
+          
+          // Increment unread count for recipient
+          await User.findByIdAndUpdate(id, {
+            $inc: { unreadNotifications: 1 }
+          });
+        } catch (notificationError) {
+          console.error('Error creating follow notification:', notificationError);
+        }
       }
 
       return targetUser;
@@ -561,6 +623,26 @@ if (deletePost) {
       const user = await User.findById(id);
       if (!user) throw new Error("User not found");
       return user;
+    },
+
+    markNotificationsAsRead: async (_, { userId }) => {
+      try {
+        // Mark all notifications as read for this user
+        await Notification.updateMany(
+          { recipient: userId, isRead: false },
+          { isRead: true }
+        );
+        
+        // Reset unread count to 0
+        await User.findByIdAndUpdate(userId, {
+          unreadNotifications: 0
+        });
+        
+        return "Notifications marked as read";
+      } catch (error) {
+        console.error('Error marking notifications as read:', error);
+        throw new Error('Failed to mark notifications as read');
+      }
     },
   },
 

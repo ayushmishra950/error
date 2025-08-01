@@ -85,6 +85,12 @@ const userSchema = new mongoose.Schema({
       ref: "Post",
     },
   ],
+
+  // Notification count field
+  unreadNotifications: {
+    type: Number,
+    default: 0,
+  },
 },
 { timestamps: true }
 );

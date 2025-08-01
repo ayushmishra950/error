@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useQuery } from '@apollo/client';
-import { GET_UNREAD_NOTIFICATIONS_COUNT, GET_USER_NOTIFICATIONS_SAFE } from '../graphql/mutations';
+import { useQuery, useMutation } from '@apollo/client';
+import { GET_UNREAD_NOTIFICATIONS_COUNT, GET_USER_NOTIFICATIONS_SAFE, MARK_NOTIFICATIONS_AS_READ } from '../graphql/mutations';
 import { GetTokenFromCookie } from '../components/getToken/GetToken';
 
 const NotificationContext = createContext();
@@ -51,7 +51,10 @@ export const NotificationProvider = ({ children }) => {
     {
       variables: { userId: user?.id },
       skip: !user?.id,
-      pollInterval: 5000, // Poll every 5 seconds for faster updates
+      pollInterval: 15000, // Reduced polling to avoid errors
+      fetchPolicy: 'cache-and-network', // Use cache first
+      errorPolicy: 'ignore', // Ignore errors to prevent data loss
+      notifyOnNetworkStatusChange: false, // Prevent loading state changes
       onCompleted: (data) => {
         if (data?.getUserNotifications) {
           // Filter notifications to only count like, comment, and comment_like types
@@ -71,13 +74,11 @@ export const NotificationProvider = ({ children }) => {
               types: filteredNotifications.map(n => n.type)
             });
           }
-        } else {
-          setUnreadCount(0);
         }
       },
       onError: (error) => {
         console.error('Error fetching notifications for count:', error);
-        setUnreadCount(0);
+        // Don't reset count on error, keep previous value
       },
     }
   );
@@ -88,7 +89,10 @@ export const NotificationProvider = ({ children }) => {
     {
       variables: { userId: user?.id },
       skip: !user?.id,
-      pollInterval: 10000, // Poll less frequently as backup
+      pollInterval: 20000, // Poll less frequently as backup
+      fetchPolicy: 'cache-and-network',
+      errorPolicy: 'ignore',
+      notifyOnNetworkStatusChange: false,
       onError: (error) => {
         console.error('Error fetching unread count (backup):', error);
       },
@@ -133,13 +137,24 @@ export const NotificationProvider = ({ children }) => {
     }
   };
 
+  // Mutation to mark notifications as read
+  const [markNotificationsAsReadMutation] = useMutation(MARK_NOTIFICATIONS_AS_READ);
+
   // Function to mark notifications as read (will be called from NotificationsPage)
-  const markAsRead = () => {
-    setUnreadCount(0);
-    // Also refresh from server to ensure consistency
-    setTimeout(() => {
-      refreshUnreadCount();
-    }, 500);
+  const markAsRead = async () => {
+    if (user?.id) {
+      try {
+        await markNotificationsAsReadMutation({
+          variables: { userId: user.id }
+        });
+        setUnreadCount(0);
+        console.log('✅ Notifications marked as read');
+      } catch (error) {
+        console.error('Error marking notifications as read:', error);
+        // Still set to 0 locally for better UX
+        setUnreadCount(0);
+      }
+    }
   };
 
   // Function to increment unread count (for real-time updates)

@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@apollo/client';
-import { GET_USER_NOTIFICATIONS, GET_USER_NOTIFICATIONS_SAFE } from '../graphql/mutations';
-import { playNotificationSound, requestNotificationPermission, showBrowserNotification } from '../utils/notificationSound';
-import { useNotifications } from '../context/NotificationContext';
+import { GET_USER_NOTIFICATIONS, GET_USER_NOTIFICATIONS_SAFE } from '../../graphql/mutations';
+import { playNotificationSound, requestNotificationPermission, showBrowserNotification } from '../../utils/notificationSound';
+import { useNotifications } from '../../context/NotificationContext';
 import io from 'socket.io-client';
 
 const useRealTimeNotifications = (userId) => {
